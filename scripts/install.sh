@@ -1,16 +1,17 @@
 function install_arena() {
 	HOST_NETWORK=${HOST_NETWORK:-"false"}
 	PROMETHEUS=${PROMETHEUS:-"false"}
-	NAMESPACE=${NAMESPACE:-"default"}
 
 	cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
   name: arena-installer
-  namespace: $NAMESPACE
+  namespace: kube-system
 spec:
   restartPolicy: Never
+  hostNetwork: true
+  serviceAccountName: admin
   hostNetwork: true
   containers:
   - name: arena
@@ -22,20 +23,10 @@ spec:
       value: "$PROMETHEUS"
     - name: platform
       value: ack
-    - name: KUBECONFIG
-      value: /root/.kube/config
-    volumeMounts:
-    - mountPath: /root/.kube/config
-      name: kube-config
   tolerations:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
     operator: Exists
-  volumes:
-    - name: kube-config
-      hostPath:
-        path: /root/.kube/config
-        type: File
 EOF
 }
 
